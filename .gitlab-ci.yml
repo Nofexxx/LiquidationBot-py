@@ -1,0 +1,71 @@
+# default:
+#   before_script:
+#     - echo "$CI_JOB_TOKEN" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
+
+# stages:
+#   - build
+#   - cleanup
+#   - deploy_prod
+#   - deploy_dev
+
+# variables:
+#   IMAGE_NAME: $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_NAME:$CI_COMMIT_SHA
+#   SERVICE_NAME: "your-service-name"  # <-- CHANGE THIS
+
+# build:
+#   stage: build
+#   script:
+#     - curl -s -X POST https://api.telegram.org/bot$BOT_TOKEN/sendMessage -d chat_id=$CHAT_BOT_ID -d text="🔨New $SERVICE_NAME Build Started%0A👨‍💻$GITLAB_USER_NAME"
+#     - docker build . -t $IMAGE_NAME
+#     - docker push $IMAGE_NAME
+#   tags:
+#     - dev
+#   only:
+#     - main
+#     - dev
+
+# cleanup:
+#   stage: cleanup
+#   when: always
+#   script:
+#     - docker system prune -f || true
+#   tags:
+#     - dev
+
+# deploy_prod:
+#   stage: deploy_prod
+#   script:
+#     - curl -s -X POST https://api.telegram.org/bot$BOT_TOKEN/sendMessage -d chat_id=$CHAT_BOT_ID -d text="🤞Prod $SERVICE_NAME Deploy Started%0A👨‍💻$GITLAB_USER_NAME"
+#     - git config user.email cicd@lumos.com
+#     - git config user.name "cicd-lumos"
+#     - git clone ssh://git@git.dapp-devs.com:2222/lumos-labs/lumos-infra.git lumos-infra
+#     - cd lumos-infra
+#     - (cd ioc-helm; IMAGE_TAG=$CI_COMMIT_SHA yq e '.image.tag=env(IMAGE_TAG)' -i $SERVICE_NAME/api_values.yaml)
+#     - (cd ioc-helm; IMAGE_TAG=$CI_COMMIT_SHA yq e '.image.tag=env(IMAGE_TAG)' -i $SERVICE_NAME/listener_values.yaml)
+#     - git add .
+#     - git commit -m "updated $SERVICE_NAME"
+#     - git push origin
+#     - curl -s -X POST https://api.telegram.org/bot$BOT_TOKEN/sendMessage -d chat_id=$CHAT_BOT_ID -d text="🦄Prod $SERVICE_NAME Deploy Finished, wait for a sync in ArgoCD%0A👨‍💻$GITLAB_USER_NAME"
+#   tags:
+#     - dev
+#   only:
+#     - main
+
+# deploy_dev:
+#   stage: deploy_dev
+#   script:
+#     - curl -s -X POST https://api.telegram.org/bot$BOT_TOKEN/sendMessage -d chat_id=$CHAT_BOT_ID -d text="🤞Dev $SERVICE_NAME Deploy Started%0A👨‍💻$GITLAB_USER_NAME"
+#     - git config user.email cicd@lumos.com
+#     - git config user.name "cicd-lumos"
+#     - git clone ssh://git@git.dapp-devs.com:2222/lumos-labs/lumos-infra.git lumos-infra
+#     - cd lumos-infra
+#     - (cd ioc-helm; IMAGE_TAG=$CI_COMMIT_SHA yq e '.image.tag=env(IMAGE_TAG)' -i $SERVICE_NAME/api_dev.yaml)
+#     - (cd ioc-helm; IMAGE_TAG=$CI_COMMIT_SHA yq e '.image.tag=env(IMAGE_TAG)' -i $SERVICE_NAME/listener_dev.yaml)
+#     - git add .
+#     - git commit -m "updated $SERVICE_NAME"
+#     - git push origin
+#     - curl -s -X POST https://api.telegram.org/bot$BOT_TOKEN/sendMessage -d chat_id=$CHAT_BOT_ID -d text="🦄Dev $SERVICE_NAME Deploy Finished, wait for a sync in ArgoCD%0A👨‍💻$GITLAB_USER_NAME"
+#   tags:
+#     - dev
+#   only:
+#     - dev
