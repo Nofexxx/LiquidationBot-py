@@ -2,6 +2,40 @@
 
 FastAPI-based Python service template with GitLab CI/CD pipeline.
 
+# How to use
+
+## Clone the template
+
+git clone ssh://git@git.dapp-devs.com:2222/lumos-labs/tools/python-template.git your-new-project
+
+## Enter the project directory
+
+cd your-new-project
+
+## Remove the old git history
+
+rm -rf .git
+
+## Initialize new git repository
+
+git init
+
+## Add the new remote
+
+git remote add origin https://git.dapp-devs.com/your-group/your-new-repo.git
+
+## Add all files
+
+git add .
+
+## Commit
+
+git commit -m "Initial commit from template"
+
+## Push to main branch
+
+git push -u origin main
+
 # Project Structure
 
 ```
