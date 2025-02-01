@@ -57,7 +57,6 @@
 #     - curl -s -X POST https://api.telegram.org/bot$BOT_TOKEN/sendMessage -d chat_id=$CHAT_BOT_ID -d text="🤞Dev $SERVICE_NAME Deploy Started%0A👨‍💻$GITLAB_USER_NAME"
 #     - git config user.email cicd@lumos.com
 #     - git config user.name "cicd-lumos"
-
 # Here you should update the service name and the path to the helm chart
 #     - git clone ssh://git@git.dapp-devs.com:2222/lumos-labs/lumos-infra.git lumos-infra
 #     - cd lumos-infra
