@@ -58,6 +58,16 @@ docker build -t fastapi-template .
 docker run -d -p 80:80 fastapi-template
 ```
 
+# Testing
+
+Testing includes the use of the `testcontainers` library, which requires Docker to be installed on your machine.
+
+Please ensure that you are careful with environment variables so that the ones set during testing are used correctly. This is crucial to avoid conflicts with other environments or configurations on your system.
+
+```bash
+pytest
+```
+
 # Models
 
 In `models/db/` folder you can find models for your project with postgresql.
