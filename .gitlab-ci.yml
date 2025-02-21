@@ -40,8 +40,7 @@
 #     - git config user.name "cicd-lumos"
 #     - git clone ssh://git@git.dapp-devs.com:2222/lumos-labs/lumos-infra.git lumos-infra
 #     - cd lumos-infra
-#     - (cd ioc-helm; IMAGE_TAG=$CI_COMMIT_SHA yq e '.image.tag=env(IMAGE_TAG)' -i $SERVICE_NAME/api_values.yaml)
-#     - (cd ioc-helm; IMAGE_TAG=$CI_COMMIT_SHA yq e '.image.tag=env(IMAGE_TAG)' -i $SERVICE_NAME/listener_values.yaml)
+#     - (cd ioc-helm; IMAGE_TAG=$CI_COMMIT_SHA yq e '.image.tag=env(IMAGE_TAG)' -i $SERVICE_NAME/values.yaml)
 #     - git add .
 #     - git commit -m "updated $SERVICE_NAME"
 #     - git push origin
@@ -61,7 +60,7 @@
 # Here you should update the service name and the path to the helm chart
 #     - git clone ssh://git@git.dapp-devs.com:2222/lumos-labs/lumos-infra.git lumos-infra
 #     - cd lumos-infra
-#     - (cd ioc-helm; IMAGE_TAG=$CI_COMMIT_SHA yq e '.image.tag=env(IMAGE_TAG)' -i $SERVICE_NAME/api_dev.yaml)
+#     - (cd ioc-helm; IMAGE_TAG=$CI_COMMIT_SHA yq e '.image.tag=env(IMAGE_TAG)' -i $SERVICE_NAME/dev.yaml)
 #     - git add .
 #     - git commit -m "updated $SERVICE_NAME"
 #     - git push origin
