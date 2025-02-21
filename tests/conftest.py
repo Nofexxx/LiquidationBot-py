@@ -1,9 +1,11 @@
 import pytest_asyncio
-import asyncio
 import pytest
+import asyncio
+
 from fastapi.testclient import TestClient
 from testcontainers.postgres import PostgresContainer
 from testcontainers.redis import RedisContainer
+
 from unittest.mock import patch
 
 import os
