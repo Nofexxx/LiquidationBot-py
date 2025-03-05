@@ -1,9 +1,11 @@
 from fastapi import FastAPI
 import uvicorn
+from typing import Dict
+
 app = FastAPI()
 
 @app.get("/")
-def read_root():
+def read_root() -> Dict[str, str]:
     return {"message": "Welcome to the FastAPI template"}
 
 
