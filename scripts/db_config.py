@@ -18,7 +18,7 @@
 #     user: str | None = os.environ.get('POSTGRES_USER')
 #     password: str | None = os.environ.get('POSTGRES_PASS')
 #     dbname: str | None = os.environ.get('POSTGRES_DB')
-    
+
 #     return f'postgresql+asyncpg://{user}:{password}@{host}:{port}/{dbname}'
 
 # def get_engine() -> AsyncEngine:
@@ -36,8 +36,8 @@
 # @asynccontextmanager
 # async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
 #     async_session = async_sessionmaker(
-#         get_engine(), 
-#         class_=AsyncSession, 
+#         get_engine(),
+#         class_=AsyncSession,
 #         expire_on_commit=False
 #     )
 #     session: AsyncSession = async_session()
