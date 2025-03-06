@@ -4,9 +4,9 @@ from typing import Dict
 
 app = FastAPI()
 
-@app.get("/")
-def read_root() -> Dict[str, str]:
-    return {"message": "Welcome to the FastAPI template"}
+@app.get("/", response_model=Dict[str, str])
+async def read_root() -> Dict[str, str]:
+    return {"Hello": "World"}
 
 
 if __name__ == "__main__":
