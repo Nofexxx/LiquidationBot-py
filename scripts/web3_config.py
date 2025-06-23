@@ -14,8 +14,8 @@ from web3 import Web3
 from web3.contract import Contract
 
 load_dotenv()
-MY_LIQUIDATION_CONTRACT_ADDRESS: ChecksumAddress = Web3.to_checksum_address(
-    "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
+LIQUIDATION_CONTRACT_ADDRESS: ChecksumAddress = Web3.to_checksum_address(
+    "0xAE246E208ea35B3F23dE72b697D47044FC594D5F"
 )
 
 
@@ -46,4 +46,4 @@ def getContract(w3: Web3, abiFileName: str) -> Contract:
     else:
         raise ValueError("Invalid abi format")
 
-    return w3.eth.contract(address=MY_LIQUIDATION_CONTRACT_ADDRESS, abi=abi)
+    return w3.eth.contract(address=LIQUIDATION_CONTRACT_ADDRESS, abi=abi)
