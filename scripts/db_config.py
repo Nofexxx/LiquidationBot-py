@@ -3,23 +3,29 @@
 # Template for db_config.py
 
 import os
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from contextlib import asynccontextmanager
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.ext.asyncio import AsyncEngine
 from typing import AsyncGenerator
 
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
+from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
 
-def get_connection_string() -> str:
-    host: str | None = os.environ.get('POSTGRES_HOST')
-    port: str | None = os.environ.get('POSTGRES_PORT')
-    user: str | None = os.environ.get('POSTGRES_USER')
-    password: str | None = os.environ.get('POSTGRES_PASS')
-    dbname: str | None = os.environ.get('POSTGRES_DB')
 
-    return f'postgresql+asyncpg://{user}:{password}@{host}:{port}/{dbname}'
+def get_connection_string() -> str:
+    host: str | None = os.environ.get("POSTGRES_HOST")
+    port: str | None = os.environ.get("POSTGRES_PORT")
+    user: str | None = os.environ.get("POSTGRES_USER")
+    password: str | None = os.environ.get("POSTGRES_PASS")
+    dbname: str | None = os.environ.get("POSTGRES_DB")
+
+    return f"postgresql+asyncpg://{user}:{password}@{host}:{port}/{dbname}"
+
 
 def get_engine() -> AsyncEngine:
     return create_async_engine(
@@ -28,17 +34,14 @@ def get_engine() -> AsyncEngine:
         pool_size=1,
         max_overflow=2,
         pool_timeout=60,
-    pool_recycle=600
-)
+        pool_recycle=600,
+    )
 
 
-
-# @asynccontextmanager
+@asynccontextmanager
 async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
     async_session = async_sessionmaker(
-        get_engine(),
-        class_=AsyncSession,
-        expire_on_commit=False
+        get_engine(), class_=AsyncSession, expire_on_commit=False
     )
     session: AsyncSession = async_session()
     try:
