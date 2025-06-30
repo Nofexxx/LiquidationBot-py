@@ -1,5 +1,5 @@
 # schemas.py
-from typing import Any, Dict
+from typing import Tuple
 
 from pydantic import BaseModel, Field
 
@@ -14,22 +14,22 @@ class Borrow(BaseModel):
 
 
 class UserAccountData(BaseModel):
-    totalCollateralETH: int = Field(gt=0)
-    totalDebtETH: int = Field(gt=0)
-    availableBorrowsETH: int = Field(gt=0)
-    currentLiquidationThreshold: int = Field(gt=0)
-    ltv: int = Field(gt=0)
-    healthFactor: int = Field(gt=0)
+    totalCollateralETH: int
+    totalDebtETH: int
+    availableBorrowsETH: int
+    currentLiquidationThreshold: int
+    ltv: int
+    healthFactor: int
 
     @classmethod
-    def from_Dict(cls, data: Dict[str, int]) -> "UserAccountData":
+    def from_tuple(cls, data: Tuple[int, int, int, int, int, int]) -> "UserAccountData":
         return cls(
-            totalCollateralETH=data["totalCollateralETH"],
-            totalDebtETH=data["totalDebtETH"],
-            availableBorrowsETH=data["availableBorrowsETH"],
-            currentLiquidationThreshold=data["currentLiquidationThreshold"],
-            ltv=data["ltv"],
-            healthFactor=data["healthFactor"],
+            totalCollateralETH=data[0],
+            totalDebtETH=data[1],
+            availableBorrowsETH=data[2],
+            currentLiquidationThreshold=data[3],
+            ltv=data[4],
+            healthFactor=data[5],
         )
 
 
@@ -40,10 +40,24 @@ class UserDebtData(BaseModel):
     debtToCover: int = Field(gt=0)
 
     @classmethod
-    def from_Dict(cls, data: Dict[str, Any]) -> "UserDebtData":
+    def from_tuple(cls, data: Tuple[str, str, str, int]) -> "UserDebtData":
         return cls(
-            userAddress=data["userAddress"],
-            debtAssetAddress=data["debtAssetAddress"],
-            collateralAssetAddress=data["collateralAssetAddress"],
-            debtToCover=data["debtToCover"],
+            userAddress=data[0],
+            debtAssetAddress=data[1],
+            collateralAssetAddress=data[2],
+            debtToCover=data[3],
         )
+
+    def to_tuple(self) -> Tuple[str, str, str, int]:
+        return (
+            self.userAddress,
+            self.debtAssetAddress,
+            self.collateralAssetAddress,
+            self.debtToCover,
+        )
+
+
+# class TxData(BaseModel):
+#     txHash: str
+#     status: int
+#     gasUsed: int

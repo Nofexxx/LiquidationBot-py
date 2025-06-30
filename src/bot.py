@@ -1,10 +1,12 @@
 import asyncio
+import logging
+from logging import Logger
 from typing import List
 
 from eth_account.signers.local import LocalAccount
 from eth_typing import ChecksumAddress
-from web3 import Web3
-from web3.contract import Contract
+from web3 import AsyncWeb3
+from web3.contract import AsyncContract
 
 from models.schemas.schemas import UserDebtData
 from scripts.contract_methods import (
@@ -12,30 +14,29 @@ from scripts.contract_methods import (
     calculateMaxProfitableLiquidationData,
     getHealthFactor,
 )
-from scripts.web3_config import getAccount, getContract, getWeb3Provider
 from utils.db_service import getAddressUsersFromDb
 
+logger: Logger = logging.getLogger("botLogs")
 
-async def run_process() -> None:
-    w3: Web3 = getWeb3Provider()
-    account: LocalAccount = getAccount()
-    contract: Contract = getContract(w3, "liquidation.json")
 
-    receiveAToken: bool = False
-    batchSize: int = 3
-
+async def run_process(
+    w3: AsyncWeb3,
+    account: LocalAccount,
+    contract: AsyncContract,
+    receiveAToken: bool,
+    batchSize: int,
+) -> None:
     while True:
         borrowers: List[str] = await getAddressUsersFromDb()
-        print("Borrowers: ", borrowers)
         await batchProcessLiquidation(
             w3, account, contract, borrowers, receiveAToken, batchSize
         )
 
 
 async def batchProcessLiquidation(
-    w3: Web3,
+    w3: AsyncWeb3,
     account: LocalAccount,
-    contract: Contract,
+    contract: AsyncContract,
     _borrowers: List[str],
     receiveAToken: bool,
     batchSize: int,
@@ -47,7 +48,6 @@ async def batchProcessLiquidation(
 
     for i in range(0, len(borrowers), batchSize):
         batch: List[ChecksumAddress] = borrowers[i : i + batchSize]
-        print("Users butches: ", batch)
 
         task = [
             processUser(
@@ -66,25 +66,31 @@ async def batchProcessLiquidation(
 
         for i, error in enumerate(result):
             if isinstance(result, Exception):
-                print(f"User: {i}, execute with error: {error}")
+                logger.error("User: %i, execute with error: %s", i, error)
 
-        await asyncio.sleep(2)
+        await asyncio.sleep(10)
 
 
 async def processUser(
-    w3: Web3,
+    w3: AsyncWeb3,
     account: LocalAccount,
-    contract: Contract,
+    contract: AsyncContract,
     userAddress: ChecksumAddress,
     receiveAToken: bool,
 ) -> None:
     try:
-        hf: int = await getHealthFactor(contract, userAddress)
+        logger.debug("User %s in process", userAddress)
+        logger.debug("account: %s", account.address)
+        logger.debug("contract: %s", contract.address)
 
-        if hf < 1e18:
+        hf: int = await getHealthFactor(contract, userAddress)
+        logger.debug("hf: %f, user address: %s", hf / 10**18, userAddress)
+
+        if hf < 10**18:
             userDebtData: UserDebtData = await calculateMaxProfitableLiquidationData(
                 contract, userAddress
             )
             await LiquidationCall(w3, account, contract, userDebtData, receiveAToken)
+            logger.debug("User %s was liquidate", userAddress)
     except Exception as e:
-        print(f"Error processing {userAddress}: {e}")
+        logger.error("Error processing %s: %s", userAddress, e)

@@ -1,63 +1,86 @@
-# import pytest_asyncio
-# import pytest
-# import asyncio
+from typing import List
 
-# from fastapi.testclient import TestClient
-# from testcontainers.postgres import PostgresContainer
-# from testcontainers.redis import RedisContainer
+import pytest
+from eth_account.signers.local import LocalAccount
+from eth_typing import ChecksumAddress
+from hexbytes import HexBytes
+from web3 import AsyncWeb3
+from web3.contract import AsyncContract
 
-# from unittest.mock import patch
+from models.schemas.schemas import UserDebtData
+from scripts.contract_methods import (
+    LiquidationCall,
+    calculateMaxProfitableLiquidationData,
+    getHealthFactor,
+)
+from scripts.web3_config import getAccount, getContract, getWeb3Provider
+from utils.db_service import getAddressUsersFromDb
 
-# import os
-# from sqlalchemy import create_engine, text
+LIQUIDATION_CONTRACT_ADDRESS: ChecksumAddress = AsyncWeb3.to_checksum_address(
+    "0x77AD263Cd578045105FBFC88A477CAd808d39Cf6"
+)
 
-# @pytest.fixture(scope='session')
-# def event_loop():
-#     loop = asyncio.new_event_loop()
-#     asyncio.set_event_loop(loop)
-#     yield loop
-#     loop.close()
+"""Fixtures for web3_config"""
 
-# @pytest_asyncio.fixture(scope="module")
-# def setup_db():
-#     postgres = PostgresContainer(
-#         "postgres:15-alpine",
-#         username="test",
-#         password="test",
-#         dbname="test"
-#     )
-#     postgres.start()
 
-#     os.environ["POSTGRES_HOST"] = postgres.get_container_host_ip()
-#     os.environ["POSTGRES_PORT"] = str(postgres.get_exposed_port(5432))
-#     os.environ["POSTGRES_USER"] = "test"
-#     os.environ["POSTGRES_PASS"] = "test"
-#     os.environ["POSTGRES_DB"] = "test"
+@pytest.fixture(scope="session")
+async def web3_client():
+    w3: AsyncWeb3 = await getWeb3Provider()
 
-#     from scripts.db_config import Base
-#     sync_engine = create_engine(
-#         f"postgresql://{os.environ['POSTGRES_USER']}:{os.environ['POSTGRES_PASS']}@"
-#         f"{os.environ['POSTGRES_HOST']}:{os.environ['POSTGRES_PORT']}/{os.environ['POSTGRES_DB']}"
-#     )
+    yield w3
 
-#     Base.metadata.create_all(sync_engine)
-#     yield
 
-#     Base.metadata.drop_all(sync_engine)
-#     postgres.stop()
+@pytest.fixture(scope="function")
+async def account() -> LocalAccount:
+    return await getAccount()
 
-# @pytest_asyncio.fixture(scope="module")
-# async def setup_redis():
-#     redis = RedisContainer("redis:7-alpine")
-#     redis.start()
 
-#     os.environ["REDIS_HOST"] = redis.get_container_host_ip()
-#     os.environ["REDIS_PORT"] = str(redis.get_exposed_port(6379))
+@pytest.fixture(scope="function")
+async def contract(web3_client: AsyncWeb3) -> AsyncContract:
+    return await getContract(
+        web3_client, LIQUIDATION_CONTRACT_ADDRESS, "liquidation.json"
+    )
 
-#     from scripts.config import get_redis_client
-#     redis_client = get_redis_client()
 
-#     yield
+"""Fixture for db_service"""
 
-#     redis_client.close()
-#     redis.stop()
+
+@pytest.fixture(scope="function")
+async def addressesUsersFromDb(web3_client: AsyncWeb3) -> List[ChecksumAddress]:
+    _borrowers: List[str] = await getAddressUsersFromDb()
+    borrowers: List[ChecksumAddress] = [
+        web3_client.to_checksum_address(borrower) for borrower in _borrowers
+    ]
+    return borrowers
+
+
+"""Fixture for getHealthFactor"""
+
+
+@pytest.fixture(scope="function")
+async def healthFactor(
+    contract: AsyncContract, addressesUsersFromDb: List[ChecksumAddress]
+) -> int:
+    return await getHealthFactor(contract, addressesUsersFromDb[0])
+
+
+@pytest.fixture(scope="function")
+async def getUserDebtData(
+    contract: AsyncContract, addressesUsersFromDb: List[ChecksumAddress]
+) -> UserDebtData:
+    return await calculateMaxProfitableLiquidationData(
+        contract, addressesUsersFromDb[0]
+    )
+
+
+@pytest.fixture(scope="function")
+async def liquidateUser(
+    web3_client: AsyncWeb3,
+    account: LocalAccount,
+    contract: AsyncContract,
+    getUserDebtData: UserDebtData,
+) -> HexBytes:
+    receiveAToken: bool = True
+    return await LiquidationCall(
+        web3_client, account, contract, getUserDebtData, receiveAToken
+    )

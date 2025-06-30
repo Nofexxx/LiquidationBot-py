@@ -1,40 +1,47 @@
-# config.py
-
 import json
-
-# import logging
+import logging
 import os
+from logging import Logger
 from typing import Any, Dict, List
 
-from dotenv import load_dotenv
 from eth_account import Account
 from eth_account.signers.local import LocalAccount
 from eth_typing import ChecksumAddress
-from web3 import Web3
-from web3.contract import Contract
+from web3 import AsyncWeb3
+from web3.contract import AsyncContract
 
-load_dotenv()
-LIQUIDATION_CONTRACT_ADDRESS: ChecksumAddress = Web3.to_checksum_address(
-    "0xAE246E208ea35B3F23dE72b697D47044FC594D5F"
-)
+logger: Logger = logging.getLogger("botLogs")
 
 
-def getWeb3Provider() -> Web3:
+async def getWeb3Provider() -> AsyncWeb3:
     rpcUrl: str | None = os.getenv("RPC_URL")
     if not rpcUrl:
         raise ValueError("RPC_URL environment variable is not set")
-    return Web3(Web3.HTTPProvider(rpcUrl))
+
+    w3: AsyncWeb3 = AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(rpcUrl))
+
+    logger.info("Connected to network (Chain ID: %i)", await w3.eth.chain_id)
+    logger.info("Latest block: %i", await w3.eth.block_number)
+
+    return w3
 
 
-def getAccount() -> LocalAccount:
+async def getAccount() -> LocalAccount:
     privateKey: str | None = os.getenv("PRIVATE_KEY")
     if not privateKey:
         raise ValueError("PRIVATE_KEY environment variable is not set")
-    return Account.from_key(privateKey)
+
+    account: LocalAccount = Account.from_key(privateKey)
+    logger.info("Account loaded: %s", account.address)
+
+    return account
 
 
-def getContract(w3: Web3, abiFileName: str) -> Contract:
+async def getContract(
+    w3: AsyncWeb3, contractAddress: ChecksumAddress, abiFileName: str
+) -> AsyncContract:
     abi_path: str = os.path.join("abi", abiFileName)
+    logger.debug("abi path: %s", abi_path)
     with open(abi_path) as f:
         data: Dict[str, Any] | List[Dict[str, Any]] = json.load(f)
 
@@ -46,4 +53,18 @@ def getContract(w3: Web3, abiFileName: str) -> Contract:
     else:
         raise ValueError("Invalid abi format")
 
-    return w3.eth.contract(address=LIQUIDATION_CONTRACT_ADDRESS, abi=abi)
+    if not abi:
+        raise ValueError("Empty abi")
+
+    contract: Any = w3.eth.contract(address=contractAddress, abi=abi)
+
+    code: Any = await w3.eth.get_code(contract.address)
+
+    if len(code) < 2:
+        raise ValueError("Invalid address contract")
+
+    if not contract:
+        raise ValueError("Contract is not exists")
+    logger.info("Contract exists at: %s", contractAddress)
+
+    return contract

@@ -1,7 +1,3 @@
-# db_config.py
-
-# Template for db_config.py
-
 import os
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
