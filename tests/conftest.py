@@ -3,11 +3,10 @@ from typing import List
 import pytest
 from eth_account.signers.local import LocalAccount
 from eth_typing import ChecksumAddress
-from hexbytes import HexBytes
 from web3 import AsyncWeb3
 from web3.contract import AsyncContract
 
-from models.schemas.schemas import UserDebtData
+from models.schemas.schemas import TxData, UserDebtData
 from scripts.contract_methods import (
     LiquidationCall,
     calculateMaxProfitableLiquidationData,
@@ -79,7 +78,7 @@ async def liquidateUser(
     account: LocalAccount,
     contract: AsyncContract,
     getUserDebtData: UserDebtData,
-) -> HexBytes:
+) -> TxData:
     receiveAToken: bool = True
     return await LiquidationCall(
         web3_client, account, contract, getUserDebtData, receiveAToken

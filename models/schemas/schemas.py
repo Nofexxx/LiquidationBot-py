@@ -57,7 +57,7 @@ class UserDebtData(BaseModel):
         )
 
 
-# class TxData(BaseModel):
-#     txHash: str
-#     status: int
-#     gasUsed: int
+class TxData(BaseModel):
+    txHash: str
+    status: int
+    gasUsed: int

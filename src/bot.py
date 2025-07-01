@@ -8,7 +8,7 @@ from eth_typing import ChecksumAddress
 from web3 import AsyncWeb3
 from web3.contract import AsyncContract
 
-from models.schemas.schemas import UserDebtData
+from models.schemas.schemas import TxData, UserDebtData
 from scripts.contract_methods import (
     LiquidationCall,
     calculateMaxProfitableLiquidationData,
@@ -60,7 +60,7 @@ async def batchProcessLiquidation(
             for userAddress in batch
         ]
 
-        result: list[BaseException | None] = await asyncio.gather(
+        result: list[BaseException | bool] = await asyncio.gather(
             *task, return_exceptions=True
         )
 
@@ -77,7 +77,7 @@ async def processUser(
     contract: AsyncContract,
     userAddress: ChecksumAddress,
     receiveAToken: bool,
-) -> None:
+) -> bool:
     try:
         logger.debug("User %s in process", userAddress)
         logger.debug("account: %s", account.address)
@@ -90,7 +90,12 @@ async def processUser(
             userDebtData: UserDebtData = await calculateMaxProfitableLiquidationData(
                 contract, userAddress
             )
-            await LiquidationCall(w3, account, contract, userDebtData, receiveAToken)
-            logger.debug("User %s was liquidate", userAddress)
+            txData: TxData = await LiquidationCall(
+                w3, account, contract, userDebtData, receiveAToken
+            )
+            if txData.status == 1:
+                logger.debug("User %s was liquidate", userAddress)
+                return True
     except Exception as e:
         logger.error("Error processing %s: %s", userAddress, e)
+    return False

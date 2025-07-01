@@ -17,7 +17,7 @@ WETH_ADDRESS_CONTRACT: ChecksumAddress = AsyncWeb3.to_checksum_address(
 
 @pytest.mark.asyncio
 async def test_getHealthFactor(healthFactor: int):
-    validHealthFactorRange: Tuple[int, int] = (624275600000000000, 624275699999999999)
+    validHealthFactorRange: Tuple[int, int] = (624275000000000000, 624275699999999999)
 
     assert healthFactor >= validHealthFactorRange[0]
     assert healthFactor <= validHealthFactorRange[1]

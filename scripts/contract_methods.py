@@ -9,7 +9,7 @@ from hexbytes import HexBytes
 from web3 import AsyncWeb3
 from web3.contract import AsyncContract
 
-from models.schemas.schemas import UserAccountData, UserDebtData
+from models.schemas.schemas import TxData, UserAccountData, UserDebtData
 from utils.calculateGasPrice import calculateGasPrice
 
 logger: Logger = logging.getLogger("botLogs")
@@ -46,7 +46,7 @@ async def LiquidationCall(
     contract: AsyncContract,
     calculatedData: UserDebtData,
     receiveAToken: bool,
-) -> HexBytes:
+) -> TxData:
     tupleFromStruct: Tuple[str, str, str, int] = calculatedData.to_tuple()
 
     tx: Any = {
@@ -65,7 +65,8 @@ async def LiquidationCall(
     tx_hash_bytes: HexBytes = await w3.eth.send_raw_transaction(
         signed_tx.raw_transaction
     )
-    receipt: Any = await w3.eth.get_transaction_receipt(tx_hash_bytes)
+
+    receipt: Any = await w3.eth.wait_for_transaction_receipt(tx_hash_bytes)
 
     tx_hash_hex: str = "0x" + tx_hash_bytes.hex()
     status: int = receipt.status
@@ -75,4 +76,4 @@ async def LiquidationCall(
     logger.debug("status: %i", status)
     logger.debug("gas used: %i", gasUsed)
 
-    return tx_hash_bytes
+    return TxData(txHash=tx_hash_hex, status=status, gasUsed=gasUsed)
